@@ -1,19 +1,26 @@
 # Linux From Scratch 12
 
-##  create disk
+##  Create disk
 
+```sh
 sudo dd if=/dev/zero of=/mnt/storage/lfs.img bs=1M count=50K status=progress
 sudo mkfs.ext4 /mnt/storage/lfs.img
+```
 
+```sh
 mkdir /mnt/lfs
 sudo mount -t auto /mnt/storage/lfs.img /mnt/lfs
+```
 
-## download sources
+## Download sources
 
+```sh
 wget --input-file=wget-list-sysv --continue --directory-prefix=$LFS/sources
+```
 
-## make dirs
+## Make directories
 
+```sh
 export LFS=/mnt/lfs
 
 mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin}
@@ -25,10 +32,13 @@ done
 mkdir -v $LFS/lib64
 
 mkdir -pv $LFS/tools
+```
 
-## give your own user rights to acess fs
+## Give your own user rights to access FS
 
+```sh
 chown -v $USER $LFS/{usr{,/*},lib,var,etc,bin,sbin,tools,lib64}
+```
 
 put at the end of your .zshrc
 ```
@@ -43,7 +53,11 @@ umask 022
 ```
 
 # Chapter 5
-## install binutils
+
+## Install binutils
+
+```sh
+cd $LFS/sources
 tar -xvf binutils-2.41.tar.xz
 cd ./binutils-2.41
 mkdir build 
@@ -58,9 +72,12 @@ cd build
 
 make
 make install
+```
 
-## install gcc
+## Install GCC
 
+```sh
+cd $LFS/sources
 tar -xvf gcc-13.2.0.tar.xz
 cd gcc-13.2.0
 
@@ -108,10 +125,12 @@ cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
 
 cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
     /mnt/lfs/tools/lib/gcc/x86_64-lfs-linux-gnu/13.2.0/include/limits.h
+```
 
-## 5.4.1 - linux api headers
+## 5.4.1 - Linux API headers
 
-cd /mnt/lfs/sources
+```sh
+cd $LFS/sources
 tar -xf linux-6.4.12.tar.xz
 cd linux-6.4.12
 
@@ -152,9 +171,11 @@ make DESTDIR=$LFS install
 echo 'int main(){}' | $LFS_TGT-gcc -xc -
 readelf -l a.out | grep ld-linux
 rm -v a.out #cleanup
+```
 
 ## 5.6 - libstdc++
 
+```sh
 cd $LFS/sources/gcc-13.2.0
 mkdir build_libcpp
 cd build_libcpp
@@ -184,9 +205,12 @@ cf m4-1.4.19
             --build=$(build-aux/config.guess)
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.3 - ncurses
 
+```sh
+cd $LFS/sources
 tar -xf ncurses-6.4.tar.gz
 cd ncurses-6.4
 
@@ -215,9 +239,12 @@ popd
 make
 make DESTDIR=$LFS TIC_PATH=$(pwd)/build/progs/tic install
 echo "INPUT(-lncursesw)" > $LFS/usr/lib/libncurses.so
+```
 
 ## 6.4 - bash
 
+```sh
+cd $LFS/sources
 tar -xf bash-5.2.15.tar.gz
 cd bash-5.2.15
 
@@ -229,9 +256,12 @@ make
 make DESTDIR=$LFS install
 
 ln -sv bash $LFS/bin/sh
+```
 
 ## 6.5 - coreutils
 
+```sh
+cd $LFS/sources
 tar -xf coreutils-9.3.tar.xz
 cd coreutils-9.3
 
@@ -249,9 +279,12 @@ mv -v $LFS/usr/bin/chroot              $LFS/usr/sbin
 mkdir -pv $LFS/usr/share/man/man8
 mv -v $LFS/usr/share/man/man1/chroot.1 $LFS/usr/share/man/man8/chroot.8
 sed -i 's/"1"/"8"/'                    $LFS/usr/share/man/man8/chroot.8
+```
 
 ## 6.6 - diffutils
 
+```sh
+cd $LFS/sources
 tar -xf diffutils-3.10.tar.xz
 cd diffutils-3.10
 
@@ -279,9 +312,12 @@ popd
 make FILE_COMPILE=$(pwd)/build/src/file
 make DESTDIR=$LFS install
 rm -v $LFS/usr/lib/libmagic.la
+```
 
 ## 6.8 - findutils
 
+```sh
+cd $LFS/sources
 tar -xf findutils-4.9.0.tar.xz
 cd findutils-4.9.0
 
@@ -292,9 +328,12 @@ cd findutils-4.9.0
 
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.9 - gawk
 
+```sh
+cd $LFS/sources
 tar -xf gawk-5.2.2.tar.xz
 cd gawk-5.2.2
 
@@ -306,9 +345,12 @@ sed -i 's/extras//' Makefile.in
 
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.10 - grep
 
+```sh
+cd $LFS/sources
 tar -xf grep-3.11.tar.xz
 cd grep-3.11
 
@@ -318,9 +360,12 @@ cd grep-3.11
 
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.11 - gzip
 
+```sh
+cd $LFS/sources
 tar -xf gzip-1.12.tar.xz
 cd gzip-1.12
 
@@ -340,9 +385,12 @@ cd make-4.4.1
 
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.13 - patch
 
+```sh
+cd $LFS/sources
 tar -xf patch-2.7.6.tar.xz
 cd patch-2.7.6
 
@@ -351,10 +399,13 @@ cd patch-2.7.6
             --build=$(build-aux/config.guess)
 make
 make DESTDIR=$LFS install
+```
 
 
 ## 6.14 - sed
 
+```sh
+cd $LFS/sources
 tar -xf sed-4.9.tar.xz
 cd sed-4.9
 
@@ -364,9 +415,13 @@ cd sed-4.9
 
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.15 - tar
 
+
+```sh
+cd $LFS/sources
 tar -xf tar-1.35.tar.xz
 cd tar-1.35
 
@@ -376,9 +431,12 @@ cd tar-1.35
 
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.16 - xz
 
+```sh
+cd $LFS/sources
 tar -xf xz-5.4.4.tar.xz
 cd xz-5.4.4
 
@@ -392,9 +450,11 @@ make
 make DESTDIR=$LFS install
 
 rm -v $LFS/usr/lib/liblzma.la
+```
 
 ## 6.17 - binutils pt.2
 
+```sh
 cd $LFS/sources/binutils-2.41
 
 sed '6009s/$add_dir//' -i ltmain.sh
@@ -417,9 +477,11 @@ make
 make DESTDIR=$LFS install
 
 rm -v $LFS/usr/lib/lib{bfd,ctf,ctf-nobfd,opcodes,sframe}.{a,la}
+```
 
 ## 6.18 - GCC - pt.2
 
+```sh
 cd $LFS/sources/gcc-13.2.0
 
 sed -e '/m64=/s/lib64/lib/' -i.orig gcc/config/i386/t-linux64 
@@ -454,13 +516,17 @@ make
 make DESTDIR=$LFS install
 
 ln -sv gcc $LFS/usr/bin/cc
+```
 
 ## 7.2 - ownership
 
+```sh
 sudo chown -R root:root $LFS/{usr,lib,var,etc,bin,sbin,tools,lib64}
+```
 
 ## 7.3 - vkfs
 
+```sh
 sudo mkdir -pv $LFS/{dev,proc,sys,run}
 
 sudo mount -v --bind /dev $LFS/dev
@@ -475,18 +541,22 @@ if [ -h $LFS/dev/shm ]; then
 else
   sudo mount -t tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
 fi
+```
 
 ## 7.4 - chroot
 
+```sh
 sudo chroot "$LFS" /usr/bin/env -i   \
     HOME=/root                  \
     TERM="$TERM"                \
     PS1='(lfs chroot) \u:\w\$ ' \
     PATH=/usr/bin:/usr/sbin     \
     /bin/bash --login
+```
 
 ## 7.5 - dirs 
 
+```sh
 mkdir -pv /{boot,home,mnt,opt,srv}
 
 mkdir -pv /etc/{opt,sysconfig}
@@ -505,3 +575,4 @@ ln -sfv /run/lock /var/lock
 
 install -dv -m 0750 /root
 install -dv -m 1777 /tmp /var/tmp
+```
