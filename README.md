@@ -2,14 +2,19 @@
 
 ##  create disk
 
-sudo dd if=/dev/zero of=lfs.img bs=1M count=50K status=progress
+sudo dd if=/dev/zero of=/mnt/storage/lfs.img bs=1M count=50K status=progress
 sudo mkfs.ext4 /mnt/storage/lfs.img
+
+mkdir /mnt/lfs
+sudo mount -t auto /mnt/storage/lfs.img /mnt/lfs
 
 ## download sources
 
 wget --input-file=wget-list-sysv --continue --directory-prefix=$LFS/sources
 
 ## make dirs
+
+export LFS=/mnt/lfs
 
 mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin}
 
