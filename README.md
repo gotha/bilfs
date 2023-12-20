@@ -1,5 +1,7 @@
 # Linux From Scratch 12
 
+Notes on [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/index.html) version 12 ('stable' at the time of writing this)
+
 ##  Create disk
 
 ```sh
