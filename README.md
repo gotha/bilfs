@@ -5,28 +5,30 @@ Notes on [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/i
 ##  Create disk
 
 ```sh
-sudo dd if=/dev/zero of=/mnt/storage/lfs.img bs=1M count=50K status=progress
-sudo mkfs.ext4 /mnt/storage/lfs.img
+dd if=/dev/zero of=lfs.img bs=1M count=50K status=progress
+mkfs.ext4 lfs.img
 ```
 
 ```sh
-mkdir /mnt/lfs
-sudo mount -t auto /mnt/storage/lfs.img /mnt/lfs
+sudo mkdir -p /mnt/lfs
+sudo mount -t auto lfs.img /mnt/lfs
 ```
 
 ## Download sources
 
 ```sh
+export LFS=/mnt/lfs
+sudo chown -vR $USER $LFS
+mkdir -p $LFS/sources
 wget --input-file=wget-list-sysv --continue --directory-prefix=$LFS/sources
 ```
 
 ## Make directories
 
 ```sh
-export LFS=/mnt/lfs
-
 mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin}
 
+cd $LFS
 for i in bin lib sbin; do
   ln -sv usr/$i $LFS/$i
 done
@@ -38,13 +40,9 @@ mkdir -pv $LFS/tools
 
 ## Give your own user rights to access FS
 
-```sh
-chown -v $USER $LFS/{usr{,/*},lib,var,etc,bin,sbin,tools,lib64}
-```
-
 put at the end of your .zshrc
 ```
-export LC_AL=POSIX
+export LC_ALL=POSIX
 export LFS=/mnt/lfs
 export LFS_TGT=$(uname -m)-lfs-linux-gnu
 export CONFIG_SITE=$LFS/usr/share/config.site
