@@ -37,7 +37,8 @@ export LFS=/mnt/lfs
 export LFS_TGT=$(uname -m)-lfs-linux-gnu
 export CONFIG_SITE=$LFS/usr/share/config.site
 export PATH=$LFS/tools/bin:$PATH
-export MAKEFLAGS='-j16'
+export NPROC=$(nproc)
+export MAKEFLAGS="-j$NPROC"
 umask 022
 ```
 
