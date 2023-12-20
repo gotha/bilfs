@@ -44,7 +44,7 @@ umask 022
 
 # Chapter 5
 ## install binutils
-/mnt/lfs/sources/binutils-2.41 ❯ tar -xvf binutils-2.41.tar.xz
+tar -xvf binutils-2.41.tar.xz
 cd ./binutils-2.41
 mkdir build 
 cd build
