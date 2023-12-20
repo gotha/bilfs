@@ -2,6 +2,39 @@
 
 Notes on [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/index.html) version 12 ('stable' at the time of writing this)
 
+## Using nix
+
+If you are using Nix, you can use nix-shell
+
+```sh
+nix-shell --pure lfs.nix
+```
+
+## Or not using nix-shell
+
+If not using nix-shell you have to set some environment vars and make sure all dependencies are installed.
+
+Set `LFS` env variable (if not using nix-shell), default is `/mnt/lfs`
+
+Put at the end of your .zshrc/.bashrc if you aren't using the nix-shell
+```
+export LC_ALL=POSIX
+export LFS=/mnt/lfs
+export LFS_TGT=$(uname -m)-lfs-linux-gnu
+export CONFIG_SITE=$LFS/usr/share/config.site
+export PATH=$LFS/tools/bin:$PATH
+export NPROC=$(nproc)
+export MAKEFLAGS="-j$NPROC"
+umask 022
+```
+
+## Check all dependencies are installed with required minimum versions
+
+```sh
+./check-versions.sh
+```
+
+
 ##  Create disk
 
 ```sh
@@ -9,15 +42,15 @@ dd if=/dev/zero of=lfs.img bs=1M count=50K status=progress
 mkfs.ext4 lfs.img
 ```
 
+
 ```sh
-sudo mkdir -p /mnt/lfs
-sudo mount -t auto lfs.img /mnt/lfs
+sudo mkdir -p $LFS
+sudo mount -t auto lfs.img $LFS
 ```
 
 ## Download sources
 
 ```sh
-export LFS=/mnt/lfs
 sudo chown -vR $USER $LFS
 mkdir -p $LFS/sources
 wget --input-file=wget-list-sysv --continue --directory-prefix=$LFS/sources
@@ -33,23 +66,9 @@ for i in bin lib sbin; do
   ln -sv usr/$i $LFS/$i
 done
 
-mkdir -v $LFS/lib64
+mkdir -v $LFS/lib64 # only on x86_64
 
 mkdir -pv $LFS/tools
-```
-
-## Give your own user rights to access FS
-
-put at the end of your .zshrc
-```
-export LC_ALL=POSIX
-export LFS=/mnt/lfs
-export LFS_TGT=$(uname -m)-lfs-linux-gnu
-export CONFIG_SITE=$LFS/usr/share/config.site
-export PATH=$LFS/tools/bin:$PATH
-export NPROC=$(nproc)
-export MAKEFLAGS="-j$NPROC"
-umask 022
 ```
 
 # Chapter 5
@@ -58,7 +77,7 @@ umask 022
 
 ```sh
 cd $LFS/sources
-tar -xvf binutils-2.41.tar.xz
+tar -xf binutils-2.41.tar.xz
 cd ./binutils-2.41
 mkdir build 
 cd build
@@ -88,6 +107,7 @@ mv -v gmp-6.3.0 gmp
 tar -xf ../mpc-1.3.1.tar.gz
 mv -v mpc-1.3.1 mpc
 
+# only for x86_64
 sed -e '/m64=/s/lib64/lib/' \
         -i.orig gcc/config/i386/t-linux64
 
