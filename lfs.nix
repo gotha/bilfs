@@ -20,6 +20,7 @@ mkShell {
     texinfo
     util-linux
     xz
+    wget
   ];
   shellHook = ''
     if [ -f /run/wrappers/bin/sudo ]; then
