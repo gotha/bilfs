@@ -1,6 +1,7 @@
 with (import <nixpkgs> {});
 mkShell {
   buildInputs = [
+    cacert
     coreutils
     bash
     binutils
