@@ -97,7 +97,7 @@ make install
 
 ```sh
 cd $LFS/sources
-tar -xvf gcc-13.2.0.tar.xz
+tar -xf gcc-13.2.0.tar.xz
 cd gcc-13.2.0
 
 tar -xf ../mpfr-4.2.0.tar.xz
@@ -145,6 +145,9 @@ cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
 
 cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
     /mnt/lfs/tools/lib/gcc/x86_64-lfs-linux-gnu/13.2.0/include/limits.h
+
+cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
+    /mnt/lfs/tools/lib/gcc/aarch64-lfs-linux-gnu/13.2.0/include/limits.h
 ```
 
 ## 5.4.1 - Linux API headers
@@ -159,9 +162,11 @@ make mrproper
 make headers
 find usr/include -type f ! -name '*.h' -delete
 cp -rv usr/include $LFS/usr
+```
 
 ## 5.5 - glibc
 
+```sh
 cd $LFS/sources
 tar -xf glibc-2.38.tar.xz
 cd glibc-2.38
@@ -213,10 +218,13 @@ make
 make DESTDIR=$LFS install
 
 rm -v $LFS/usr/lib/lib{stdc++,stdc++fs,supc++}.la
+```
 
 
 ## 6.2 - M4
 
+```sh
+cd $LFS/sources
 tar -xf m4-1.4.19.tar.xz
 cf m4-1.4.19
 
@@ -313,9 +321,12 @@ cd diffutils-3.10
             --build=$(./build-aux/config.guess)
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.7 - file
 
+```sh
+cd $LFS/sources
 tar -xf file-5.45.tar.gz
 cd file-5.45
 
@@ -392,9 +403,12 @@ cd gzip-1.12
 ./configure --prefix=/usr --host=$LFS_TGT
 make
 make DESTDIR=$LFS install
+```
 
 ## 6.12 - make
 
+```sh
+cd $LFS/sources
 tar -xf make-4.4.1.tar.gz
 cd make-4.4.1
 
