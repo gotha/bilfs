@@ -3,10 +3,8 @@
 set -e
 
 echo " >>> Install binutils"
-cd $LFS/sources
-cd ./binutils-2.41
-mkdir build 
-cd build
+cd $LFS/sources/binutils-2.41
+rm -rf build && mkdir build && cd build
 
 ../configure --prefix=$LFS/tools \
              --with-sysroot=$LFS \
@@ -19,9 +17,7 @@ make
 make install
 
 echo " >>> install GCC"
-cd $LFS/sources
-tar -xf gcc-13.2.0.tar.xz
-cd gcc-13.2.0
+cd $LFS/sources/gcc-13.2.0
 
 tar -xf ../mpfr-4.2.0.tar.xz
 mv -v mpfr-4.2.0 mpfr
@@ -33,8 +29,7 @@ mv -v mpc-1.3.1 mpc
 sed -e '/m64=/s/lib64/lib/' \
         -i.orig gcc/config/i386/t-linux64
 
-mkdir -v build
-cd       build
+rm -rf build && mkdir -v build && cd build
 
 ../configure                  \
     --target=$LFS_TGT         \
@@ -67,8 +62,7 @@ cat gcc/limitx.h gcc/glimits.h gcc/limity.h > "$GCC_DIR/include/limits.h"
 
 echo " >>> Linux headers"
 
-cd $LFS/sources
-cd linux-6.4.12
+cd $LFS/sources/linux-6.4.12
 
 make mrproper
 
@@ -79,16 +73,15 @@ cp -rv usr/include $LFS/usr
 
 echo " >>> GlibC"
 
-cd $LFS/sources
-cd glibc-2.38
+cd $LFS/sources/glibc-2.38
 
 ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
 ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3
 
 patch -Np1 -i ../glibc-2.38-fhs-1.patch
 
-mkdir -v build
-cd build
+rm -rf build && mkdir -v build && cd build
+
 echo "rootsbindir=/usr/sbin" > configparms
 
 ../configure                             \
