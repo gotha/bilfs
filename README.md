@@ -27,7 +27,6 @@ Delete the folder if you change the list of packages.
 
 ```sh
 LFS_DISK_IMAGE=/mnt/storage/lfs-20231227.img ./prepare.sh
-LFS_DISK_IMAGE=/mnt/storage/lfs-20231227-2.img ./prepare.sh
 ```
 
 ## Install tools from host
@@ -65,18 +64,7 @@ sudo chown -R root:root $LFS/{usr,lib,var,etc,bin,sbin,tools,lib64}
 
 sudo mkdir -pv $LFS/{dev,proc,sys,run,tmp}
 
-sudo mount -v --bind /dev $LFS/dev
-
-sudo mount -v --bind /dev/pts $LFS/dev/pts
-sudo mount -vt proc proc $LFS/proc
-sudo mount -vt sysfs sysfs $LFS/sys
-sudo mount -vt tmpfs tmpfs $LFS/run
-
-if [ -h $LFS/dev/shm ]; then 
-    sudo mkdir -pv $LFS/$(readlink $LFS/dev/shm) 
-else 
-    sudo mount -t tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
-fi
+./chroot-mount.sh
 ```
 
 
@@ -118,13 +106,7 @@ and when successful run install 4
 exit the chroot and umount
 
 ```sh
-sudo umount $LFS/proc
-sudo umount $LFS/dev/pts
-sudo umount $LFS/dev/shm
-sudo umount $LFS/dev
-sudo umount $LFS/sys
-sudo umount $LFS/run
-sudo umount $LFS
+./chroot-umount.sh
 ```
 
 
