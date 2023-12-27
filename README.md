@@ -40,12 +40,17 @@ umask 022
 ```sh
 dd if=/dev/zero of=lfs.img bs=1M count=50K status=progress
 mkfs.ext4 lfs.img
+
+dd if=/dev/zero of=lfs-20231226.img bs=1M count=50K status=progress
+mkfs.ext4 lfs-20231226.img
 ```
 
 
 ```sh
 sudo mkdir -p $LFS
 sudo mount -t auto lfs.img $LFS
+
+sudo mount -t auto lfs-20231226.img $LFS
 ```
 
 ## Download sources
@@ -570,10 +575,10 @@ sudo mount -vt proc proc $LFS/proc
 sudo mount -vt sysfs sysfs $LFS/sys
 sudo mount -vt tmpfs tmpfs $LFS/run
 
-if [ -h $LFS/dev/shm ]; then
-  sudo mkdir -pv $LFS/$(readlink $LFS/dev/shm)
-else
-  sudo mount -t tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
+if [ -h $LFS/dev/shm ]; then 
+    sudo mkdir -pv $LFS/$(readlink $LFS/dev/shm) 
+else 
+    sudo mount -t tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
 fi
 ```
 
@@ -609,4 +614,478 @@ ln -sfv /run/lock /var/lock
 
 install -dv -m 0750 /root
 install -dv -m 1777 /tmp /var/tmp
+```
+
+## 7.6 - creating essential files and symlinks
+
+```sh
+ln -sv /proc/self/mounts /etc/mtab
+
+cat > /etc/hosts << EOF
+127.0.0.1  localhost $(hostname)
+::1        localhost
+EOF
+
+cat > /etc/passwd << "EOF"
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/dev/null:/usr/bin/false
+daemon:x:6:6:Daemon User:/dev/null:/usr/bin/false
+messagebus:x:18:18:D-Bus Message Daemon User:/run/dbus:/usr/bin/false
+uuidd:x:80:80:UUID Generation Daemon User:/dev/null:/usr/bin/false
+nobody:x:65534:65534:Unprivileged User:/dev/null:/usr/bin/false
+EOF
+
+cat > /etc/group << "EOF"
+root:x:0:
+bin:x:1:daemon
+sys:x:2:
+kmem:x:3:
+tape:x:4:
+tty:x:5:
+daemon:x:6:
+floppy:x:7:
+disk:x:8:
+lp:x:9:
+dialout:x:10:
+audio:x:11:
+video:x:12:
+utmp:x:13:
+usb:x:14:
+cdrom:x:15:
+adm:x:16:
+messagebus:x:18:
+input:x:24:
+mail:x:34:
+kvm:x:61:
+uuidd:x:80:
+wheel:x:97:
+users:x:999:
+nogroup:x:65534:
+EOF
+
+echo "tester:x:101:101::/home/tester:/bin/bash" >> /etc/passwd
+echo "tester:x:101:" >> /etc/group
+install -o tester -d /home/tester
+
+touch /var/log/{btmp,lastlog,faillog,wtmp}
+chgrp -v utmp /var/log/lastlog
+chmod -v 664  /var/log/lastlog
+chmod -v 600  /var/log/btmp
+
+
+```
+
+## Get curl source code
+
+exit the chroot
+
+```sh
+cd $LFS/sources
+wget https://curl.se/download/curl-8.5.0.tar.gz
+```
+
+## Get make-ca
+
+```sh
+cd $LFS/sources
+wget https://github.com/lfs-book/make-ca/releases/download/v1.12/make-ca-1.12.tar.xz
+wget https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.13.tar.gz
+wget https://github.com/p11-glue/p11-kit/releases/download/0.23.15/p11-kit-0.23.15.tar.gz
+```
+
+
+## Chroot again with slightly different config
+
+
+```sh
+sudo chroot "$LFS" /usr/bin/env -i   \
+    HOME=/root                  \
+    TERM="$TERM"                \
+    PS1='(lfs chroot) \u:\w\$ ' \
+    PATH=/usr/bin:/usr/sbin:/usr/local/bin     \
+    /bin/bash --login
+```
+
+## iana-etc
+
+```sh
+cd /sources
+tar -xf iana-etc-20230810.tar.gz
+cd iana-etc-20230810
+cp services protocols /etc
+```
+
+## glibc
+
+```sh
+
+cd /sources
+tar -xf expat-2.5.0.tar.xz 
+cd expat-2.5.0
+./configure --prefix=/usr    \
+            --disable-static \
+            --docdir=/usr/share/doc/expat-2.5.0
+make
+make install
+
+cd sources/
+tar -xf libffi-3.4.4.tar.gz
+cd libffi-3.4.4
+./configure --prefix=/usr          \
+            --disable-static       \
+            --with-gcc-arch=native
+make
+make install
+
+
+cd /sources
+tar -xf Python-3.11.4.tar.xz
+cd Python-3.11.4
+
+./configure --prefix=/usr        \
+            --enable-shared      \
+            --with-system-expat  \
+            --with-system-ffi    \
+            --enable-optimizations
+make
+make install
+
+cat > /etc/pip.conf << EOF
+[global]
+root-user-action = ignore
+disable-pip-version-check = true
+EOF
+
+
+cd /sources/glibc-2.38
+patch -Np1 -i ../glibc-2.38-fhs-1.patch
+patch -Np1 -i ../glibc-2.38-memalign_fix-1.patch
+
+rm -rf build
+mkdir -v build
+cd build
+
+echo "rootsbindir=/usr/sbin" > configparms
+../configure --prefix=/usr                            \
+             --disable-werror                         \
+             --enable-kernel=4.14                     \
+             --enable-stack-protector=strong          \
+             --with-headers=/usr/include              \
+             libc_cv_slibdir=/usr/lib
+make
+#make check
+touch /etc/ld.so.conf
+sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
+make install
+
+sed '/RTLDLIST=/s@/usr@@g' -i /usr/bin/ldd
+
+cp -v ../nscd/nscd.conf /etc/nscd.conf
+mkdir -pv /var/cache/nscd
+
+mkdir -pv /usr/lib/locale
+localedef -i POSIX -f UTF-8 C.UTF-8 2> /dev/null || true
+
+cat > /etc/nsswitch.conf << "EOF"
+# Begin /etc/nsswitch.conf
+
+passwd: files
+group: files
+shadow: files
+
+hosts: files dns
+networks: files
+
+protocols: files
+services: files
+ethers: files
+rpc: files
+
+# End /etc/nsswitch.conf
+EOF
+
+
+tar -xf ../../tzdata2023c.tar.gz
+ZONEINFO=/usr/share/zoneinfo
+mkdir -pv $ZONEINFO/{posix,right}
+for tz in etcetera southamerica northamerica europe africa antarctica  \
+          asia australasia backward; do
+    zic -L /dev/null   -d $ZONEINFO       ${tz}
+    zic -L /dev/null   -d $ZONEINFO/posix ${tz}
+    zic -L leapseconds -d $ZONEINFO/right ${tz}
+done
+cp -v zone.tab zone1970.tab iso3166.tab $ZONEINFO
+zic -d $ZONEINFO -p Europe/Sofia
+unset ZONEINFO
+
+#interactive timezone select
+#tzselect 
+TZ='Europe/Sofia'; export TZ
+ln -sfv /usr/share/zoneinfo/Europe/Sofia /etc/localtime
+
+cat > /etc/ld.so.conf << "EOF"
+# Begin /etc/ld.so.conf
+/usr/local/lib
+/opt/lib
+
+EOF
+```
+
+## util linux
+
+```sh
+cd /sources
+tar -xf util-linux-2.39.1.tar.xz
+cd util-linux-2.39.1
+
+./configure ADJTIME_PATH=/var/lib/hwclock/adjtime    \
+            --libdir=/usr/lib    \
+            --runstatedir=/run   \
+            --docdir=/usr/share/doc/util-linux-2.39.1 \
+            --disable-chfn-chsh  \
+            --disable-login      \
+            --disable-nologin    \
+            --disable-su         \
+            --disable-setpriv    \
+            --disable-runuser    \
+            --disable-pylibmount \
+            --disable-static     \
+            --without-python
+make
+make install
+```
+
+## Setup network
+
+```sh
+
+cat > /etc/resolv.conf << "EOF"
+# Begin /etc/resolv.conf
+
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+# End /etc/resolv.conf
+EOF
+
+echo "bilfs" > /etc/hostname
+
+
+cd $LFS/sources
+tar -xf inetutils-2.4.tar.xz
+cd inetutils-2.4
+./configure --prefix=/usr        \
+            --bindir=/usr/bin    \
+            --localstatedir=/var \
+            --disable-logger     \
+            --disable-whois      \
+            --disable-rcp        \
+            --disable-rexec      \
+            --disable-rlogin     \
+            --disable-rsh        \
+            --disable-servers
+mv -v /usr/{,s}bin/ifconfig
+
+
+cd /sources
+tar -xf bison-3.8.2.tar.xz
+cd bison-3.8.2
+./configure --prefix=/usr \
+            --docdir=/usr/share/doc/bison-3.8.2
+make
+make install
+
+
+
+cd /sources
+tar -xf flex-2.6.4.tar.gz
+cd flex-2.6.4
+./configure --prefix=/usr \
+            --docdir=/usr/share/doc/flex-2.6.4 \
+            --disable-static
+make
+make install
+ln -sv flex   /usr/bin/lex
+ln -sv flex.1 /usr/share/man/man1/lex.1
+
+
+
+cd /sources
+tar -xf iproute2-6.4.0.tar.xz 
+cd iproute2-6.4.0
+
+sed -i /ARPD/d Makefile
+rm -fv man/man8/arpd.8
+
+make NETNS_RUN_DIR=/run/netns
+make SBINDIR=/usr/sbin install
+
+
+
+
+```
+
+## Install last deps
+
+```sh
+cd /sources
+tar -xf perl-5.38.0
+cd perl-5.38.0
+sh Configure -des                                        \
+             -Dprefix=/usr                               \
+             -Dvendorprefix=/usr                         \
+             -Duseshrplib                                \
+             -Dprivlib=/usr/lib/perl5/5.38/core_perl     \
+             -Darchlib=/usr/lib/perl5/5.38/core_perl     \
+             -Dsitelib=/usr/lib/perl5/5.38/site_perl     \
+             -Dsitearch=/usr/lib/perl5/5.38/site_perl    \
+             -Dvendorlib=/usr/lib/perl5/5.38/vendor_perl \
+             -Dvendorarch=/usr/lib/perl5/5.38/vendor_perl
+make
+make install
+
+cd /sources
+tar -xf zlib-1.2.13.tar.xz
+cd zlib-1.2.13
+./configure --prefix=/usr
+make
+make install
+rm -fv /usr/lib/libz.a
+
+
+cd /sources
+tar -xf openssl-3.1.2.tar.gz 
+cd openssl-3.1.2
+./config --prefix=/usr         \
+         --openssldir=/etc/ssl \
+         --libdir=lib          \
+         shared                \
+         zlib-dynamic
+make
+sed -i '/INSTALL_LIBS/s/libcrypto.a libssl.a//' Makefile
+make MANSUFFIX=ssl install
+
+
+cd /sources
+tar -xf flit_core-3.9.0.tar.gz
+cd flit_core-3.9.0
+pip3 wheel -w dist --no-build-isolation --no-deps $PWD
+pip3 install --no-index --no-user --find-links dist flit_core
+
+
+cd sources/
+tar -xf wheel-0.41.1.tar.gz
+cd wheel-0.41.1
+pip3 wheel -w dist --no-build-isolation --no-deps $PWD
+pip3 install --no-index --find-links=dist wheel
+
+cd /sources
+tar -xf ninja-1.11.1.tar.gz
+cd ninja-1.11.1
+export NINJAJOBS=16
+sed -i '/int Guess/a \
+  int   j = 0;\
+  char* jobs = getenv( "NINJAJOBS" );\
+  if ( jobs != NULL ) j = atoi( jobs );\
+  if ( j > 0 ) return j;\
+' src/ninja.cc
+python3 configure.py --bootstrap
+install -vm755 ninja /usr/bin/
+install -vDm644 misc/bash-completion /usr/share/bash-completion/completions/ninja
+install -vDm644 misc/zsh-completion  /usr/share/zsh/site-functions/_ninja
+
+cd /sources
+tar -xf meson-1.2.1.tar.gz
+cd tar -xf meson-1.2.1
+pip3 wheel -w dist --no-build-isolation --no-deps $PWD
+
+pip3 install --no-index --find-links dist meson
+install -vDm644 data/shell-completions/bash/meson /usr/share/bash-completion/completions/meson
+install -vDm644 data/shell-completions/zsh/_meson /usr/share/zsh/site-functions/_meson
+
+
+cd /sources
+tar -xf autoconf-2.71.tar.xz
+cd autoconf-2.71
+sed -e 's/SECONDS|/&SHLVL|/'               \
+    -e '/BASH_ARGV=/a\        /^SHLVL=/ d' \
+    -i.orig tests/local.at
+./configure --prefix=/usr
+make
+make install
+
+cd /sources
+tar -xf automake-1.16.5.tar.xz
+cd automake-1.16.5
+./configure --prefix=/usr --docdir=/usr/share/doc/automake-1.16.5
+make
+make install
+
+cd /sources
+tar -xf pkgconf-2.0.1.tar.xz
+cd pkgconf-2.0.1
+
+./configure --prefix=/usr              \
+            --disable-static           \
+            --docdir=/usr/share/doc/pkgconf-2.0.1
+make
+make install
+ln -sv pkgconf   /usr/bin/pkg-config
+ln -sv pkgconf.1 /usr/share/man/man1/pkg-config.1
+
+cd /sources
+tar -xf libtasn1-4.13.tar.gz
+cd libtasn1-4.13
+./configure --prefix=/usr --disable-static
+make 
+make install
+
+cd /sources
+tar -xf p11-kit-0.23.15.tar.gz
+cd p11-kit-0.23.15
+sed '20,$ d' -i trust/trust-extract-compat.in
+cat >> trust/trust-extract-compat.in << "EOF"
+# Copy existing anchor modifications to /etc/ssl/local
+/usr/libexec/make-ca/copy-trust-modifications
+
+# Generate a new trust store
+/usr/sbin/make-ca -f -g
+EOF
+
+./configure --prefix=/usr     \
+            --sysconfdir=/etc \
+            --with-trust-paths=/etc/pki/anchors
+
+make
+make install
+
+ln -s /usr/libexec/p11-kit/trust-extract-compat \
+      /usr/bin/update-ca-certificates
+
+
+cd /sources
+tar -xf make-ca-1.13.tar.xz 
+cd make-ca-1.13
+make install &&
+    install -vdm755 /etc/ssl/local
+
+
+cd /sources
+tar -xf curl-8.5.0.tar.gz
+cd curl-8.5.0
+./configure --prefix=/usr                           \
+            --disable-static                        \
+            --enable-threaded-resolver              \
+            --with-ca-path=/etc/ssl/certs \
+            --with-ssl
+make
+make install
+```
+
+## postconfig
+
+```sh
+cd /sources
+cd coreutils-9.3
+patch -Np1 -i ../coreutils-9.3-i18n-1.patch
 ```

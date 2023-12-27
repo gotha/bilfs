@@ -1,28 +1,9 @@
 #!/bin/bash
-# A script to install stuff on $LFS
 
 set -e
 
-sudo chown -vR $USER $LFS
-#mkdir -p $LFS/sources
-cp -r ./sources $LFS
-
-# create directories
-mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin}
-
-cd $LFS
-for i in bin lib sbin; do
-  ln -sv usr/$i $LFS/$i
-done
-
-mkdir -v $LFS/lib64 # only on x86_64
-
-mkdir -pv $LFS/tools
-
-
 echo " >>> Install binutils"
 cd $LFS/sources
-tar -xf binutils-2.41.tar.xz
 cd ./binutils-2.41
 mkdir build 
 cd build
@@ -87,7 +68,6 @@ cat gcc/limitx.h gcc/glimits.h gcc/limity.h > "$GCC_DIR/include/limits.h"
 echo " >>> Linux headers"
 
 cd $LFS/sources
-tar -xf linux-6.4.12.tar.xz
 cd linux-6.4.12
 
 make mrproper
@@ -100,7 +80,6 @@ cp -rv usr/include $LFS/usr
 echo " >>> GlibC"
 
 cd $LFS/sources
-tar -xf glibc-2.38.tar.xz
 cd glibc-2.38
 
 ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
