@@ -91,3 +91,7 @@ https://www.linuxfromscratch.org/patches/lfs/12.0/grub-2.06-upstream_fixes-1.pat
 https://www.linuxfromscratch.org/patches/lfs/12.0/kbd-2.6.1-backspace-1.patch
 https://www.linuxfromscratch.org/patches/lfs/12.0/readline-8.2-upstream_fix-1.patch
 https://www.linuxfromscratch.org/patches/lfs/12.0/sysvinit-3.07-consolidated-1.patch
+https://curl.se/download/curl-8.5.0.tar.gz
+https://github.com/lfs-book/make-ca/releases/download/v1.12/make-ca-1.12.tar.xz
+https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.13.tar.gz
+https://github.com/p11-glue/p11-kit/releases/download/0.23.15/p11-kit-0.23.15.tar.gz
