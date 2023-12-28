@@ -101,6 +101,24 @@ and when successful run install 4
 /opt/install4.sh
 ```
 
+## Setup network
+
+if the host is connected to the internet, you should just configure DNS for the chrooted environment
+
+```sh
+cat > /etc/resolv.conf << "EOF"
+# Begin /etc/resolv.conf
+
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+# End /etc/resolv.conf
+EOF
+
+echo "bilfs" > /etc/hostname
+```
+
+
 ## Cleanup
 
 exit the chroot and umount
