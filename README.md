@@ -101,6 +101,16 @@ and when successful run install 4
 /opt/install4.sh
 ```
 
+## Setup sudo
+
+create normal user and add it to the group `wheel`
+
+```sh
+mkdir /home/gotha
+useradd -d /home/gotha
+usermod -a -G wheel gotha
+```
+
 ## Setup network
 
 if the host is connected to the internet, you should just configure DNS for the chrooted environment
@@ -117,7 +127,6 @@ EOF
 
 echo "bilfs" > /etc/hostname
 ```
-
 
 ## Cleanup
 
