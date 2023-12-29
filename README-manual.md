@@ -1,56 +1,15 @@
 # Linux From Scratch 12
 
-Notes on [Linux From Scratch](https://www.linuxfromscratch.org/lfs/view/stable/index.html) version 12 ('stable' at the time of writing this)
-
-## Using nix
-
-If you are using Nix, you can use nix-shell
-
-```sh
-nix-shell --pure lfs.nix
-```
-
-## Or not using nix-shell
-
-If not using nix-shell you have to set some environment vars and make sure all dependencies are installed.
-
-Set `LFS` env variable (if not using nix-shell), default is `/mnt/lfs`
-
-Put at the end of your .zshrc/.bashrc if you aren't using the nix-shell
-```
-export LC_ALL=POSIX
-export LFS=/mnt/lfs
-export LFS_TGT=$(uname -m)-lfs-linux-gnu
-export CONFIG_SITE=$LFS/usr/share/config.site
-export PATH=$LFS/tools/bin:$PATH
-export NPROC=$(nproc)
-export MAKEFLAGS="-j$NPROC"
-umask 022
-```
-
-## Check all dependencies are installed with required minimum versions
-
-```sh
-./check-versions.sh
-```
-
-
 ##  Create disk
 
 ```sh
 dd if=/dev/zero of=lfs.img bs=1M count=50K status=progress
 mkfs.ext4 lfs.img
-
-dd if=/dev/zero of=lfs-20231226.img bs=1M count=50K status=progress
-mkfs.ext4 lfs-20231226.img
 ```
-
 
 ```sh
 sudo mkdir -p $LFS
 sudo mount -t auto lfs.img $LFS
-
-sudo mount -t auto lfs-20231226.img $LFS
 ```
 
 ## Download sources
@@ -75,8 +34,6 @@ mkdir -v $LFS/lib64 # only on x86_64
 
 mkdir -pv $LFS/tools
 ```
-
-# Chapter 5
 
 ## Install binutils
 
@@ -155,7 +112,7 @@ cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
     /mnt/lfs/tools/lib/gcc/aarch64-lfs-linux-gnu/13.2.0/include/limits.h
 ```
 
-## 5.4.1 - Linux API headers
+## Linux API headers
 
 ```sh
 cd $LFS/sources
@@ -169,7 +126,7 @@ find usr/include -type f ! -name '*.h' -delete
 cp -rv usr/include $LFS/usr
 ```
 
-## 5.5 - glibc
+## glibc
 
 ```sh
 cd $LFS/sources
@@ -203,7 +160,7 @@ readelf -l a.out | grep ld-linux
 rm -v a.out #cleanup
 ```
 
-## 5.6 - libstdc++
+## libstdc++
 
 ```sh
 cd $LFS/sources/gcc-13.2.0
@@ -226,7 +183,7 @@ rm -v $LFS/usr/lib/lib{stdc++,stdc++fs,supc++}.la
 ```
 
 
-## 6.2 - M4
+## M4
 
 ```sh
 cd $LFS/sources
@@ -240,7 +197,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.3 - ncurses
+## ncurses
 
 ```sh
 cd $LFS/sources
@@ -274,7 +231,7 @@ make DESTDIR=$LFS TIC_PATH=$(pwd)/build/progs/tic install
 echo "INPUT(-lncursesw)" > $LFS/usr/lib/libncurses.so
 ```
 
-## 6.4 - bash
+## bash
 
 ```sh
 cd $LFS/sources
@@ -291,7 +248,7 @@ make DESTDIR=$LFS install
 ln -sv bash $LFS/bin/sh
 ```
 
-## 6.5 - coreutils
+## coreutils
 
 ```sh
 cd $LFS/sources
@@ -314,7 +271,7 @@ mv -v $LFS/usr/share/man/man1/chroot.1 $LFS/usr/share/man/man8/chroot.8
 sed -i 's/"1"/"8"/'                    $LFS/usr/share/man/man8/chroot.8
 ```
 
-## 6.6 - diffutils
+## diffutils
 
 ```sh
 cd $LFS/sources
@@ -328,7 +285,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.7 - file
+## file
 
 ```sh
 cd $LFS/sources
@@ -350,7 +307,7 @@ make DESTDIR=$LFS install
 rm -v $LFS/usr/lib/libmagic.la
 ```
 
-## 6.8 - findutils
+## findutils
 
 ```sh
 cd $LFS/sources
@@ -366,7 +323,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.9 - gawk
+## gawk
 
 ```sh
 cd $LFS/sources
@@ -383,7 +340,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.10 - grep
+## grep
 
 ```sh
 cd $LFS/sources
@@ -398,7 +355,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.11 - gzip
+## gzip
 
 ```sh
 cd $LFS/sources
@@ -410,7 +367,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.12 - make
+## make
 
 ```sh
 cd $LFS/sources
@@ -426,7 +383,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.13 - patch
+## patch
 
 ```sh
 cd $LFS/sources
@@ -441,7 +398,7 @@ make DESTDIR=$LFS install
 ```
 
 
-## 6.14 - sed
+## sed
 
 ```sh
 cd $LFS/sources
@@ -456,7 +413,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.15 - tar
+## tar
 
 
 ```sh
@@ -472,7 +429,7 @@ make
 make DESTDIR=$LFS install
 ```
 
-## 6.16 - xz
+## xz
 
 ```sh
 cd $LFS/sources
@@ -491,7 +448,7 @@ make DESTDIR=$LFS install
 rm -v $LFS/usr/lib/liblzma.la
 ```
 
-## 6.17 - binutils pt.2
+## binutils pt.2
 
 ```sh
 cd $LFS/sources/binutils-2.41
@@ -518,7 +475,7 @@ make DESTDIR=$LFS install
 rm -v $LFS/usr/lib/lib{bfd,ctf,ctf-nobfd,opcodes,sframe}.{a,la}
 ```
 
-## 6.18 - GCC - pt.2
+## GCC - pt.2
 
 ```sh
 cd $LFS/sources/gcc-13.2.0
@@ -557,13 +514,13 @@ make DESTDIR=$LFS install
 ln -sv gcc $LFS/usr/bin/cc
 ```
 
-## 7.2 - ownership
+## ownership
 
 ```sh
 sudo chown -R root:root $LFS/{usr,lib,var,etc,bin,sbin,tools,lib64}
 ```
 
-## 7.3 - vkfs
+## vkfs
 
 ```sh
 sudo mkdir -pv $LFS/{dev,proc,sys,run}
@@ -582,7 +539,7 @@ else
 fi
 ```
 
-## 7.4 - chroot
+## chroot
 
 ```sh
 sudo chroot "$LFS" /usr/bin/env -i   \
@@ -593,7 +550,7 @@ sudo chroot "$LFS" /usr/bin/env -i   \
     /bin/bash --login
 ```
 
-## 7.5 - dirs 
+## dirs 
 
 ```sh
 mkdir -pv /{boot,home,mnt,opt,srv}
@@ -616,7 +573,7 @@ install -dv -m 0750 /root
 install -dv -m 1777 /tmp /var/tmp
 ```
 
-## 7.6 - creating essential files and symlinks
+## creating essential files and symlinks
 
 ```sh
 ln -sv /proc/self/mounts /etc/mtab
@@ -1077,12 +1034,4 @@ cd curl-8.5.0
             --with-ssl
 make
 make install
-```
-
-## postconfig
-
-```sh
-cd /sources
-cd coreutils-9.3
-patch -Np1 -i ../coreutils-9.3-i18n-1.patch
 ```

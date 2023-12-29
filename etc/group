@@ -20,7 +20,8 @@ input:x:24:
 mail:x:34:
 kvm:x:61:
 uuidd:x:80:
-wheel:x:97:
+wheel:x:97:gotha,tester
 users:x:999:
 nogroup:x:65534:
 tester:x:101:
+gotha:x:1000:
