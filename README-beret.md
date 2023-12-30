@@ -13,7 +13,7 @@ Build tools
 
 ```sh
 sudo yum install  \
-    bintuils bison byacc gcc gcc-g++ lbzip2 m4 make patch info tar wget 
+    binutils bison byacc gcc gcc-g++ lbzip2 m4 make patch info tar texi2html texinfo wget
 ```
 
 
